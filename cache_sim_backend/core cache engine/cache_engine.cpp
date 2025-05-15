@@ -49,16 +49,17 @@ void CacheEngine::rehash() {
     rows *= 2;
     cols *= 2;
     
-    vector<vector<list<int>>> newTable(rows, vector<list<int>>(cols));
+    size=0;
+    table.clear();
+    table.resize(rows, vector<list<int>>(cols));
 
     for (int i = 0; i < oldRows; ++i) {
         for (int j = 0; j < oldCols; ++j) {
-            newTable[i][j] = move(table[i][j]);
+            for(int key: oldTable[i][j]){
+                insert(key, false); 
+            }
         }
     }
-
-    table = move(newTable);
-    
 }
 
 bool CacheEngine::search(int key) {
