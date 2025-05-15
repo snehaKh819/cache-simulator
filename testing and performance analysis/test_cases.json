@@ -1,0 +1,13 @@
+{
+    "Basic Hit/Miss Test": [10, 20, 30, 10, 20],
+    "High Collision Test": [5, 9, 13, 17],
+    "Resizing Test": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13],
+    "Random Keys Test": [42, 99, 13, 88, 37, 51, 74, 90],
+    "Duplicate Key Hit Test": [33, 33, 33, 33],
+    "Large Random Sample (10k)": [100, 200, 300, 400, 500, 600, 700, 800, 900, 1000],
+    "Sequential Keys (10k)": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+    "Edge Case - Empty Input": [],
+    "Edge Case - Single Key": [42],
+    "Edge Case - Extreme Values": [-2147483648, 2147483647],
+    "Edge Case - High Collisions": [100, 200, 300, 400, 500, 100, 200, 300, 400, 500]
+}
