@@ -1,12 +1,39 @@
-import React from "react";
+// import React from "react";
 import line1 from "./line-1.svg";
 import line2 from "./line-2.svg";
 import line3 from "./line-3.svg";
 import record from "./record.png";
 import "./style.css";
 import vector from "./vector.svg";
+import React, { useState, useRef } from "react";
 
 export const Desktop = () => {
+  const [results, setResults] = useState(null);
+  const fileInputRef = useRef();
+
+  const handleStart = async () => {
+    const file = fileInputRef.current.files[0];
+    if (!file) {
+      alert("Please select a file");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const response = await fetch("http://localhost:8000/api/upload/", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await response.json();
+      setResults(data);
+    } catch (err) {
+      console.error("Simulation failed", err);
+      alert("Simulation failed. See console.");
+    }
+  }
+
   return (
     <div className="desktop">
       <div className="div">
@@ -52,10 +79,15 @@ export const Desktop = () => {
           <div className="text-wrapper-4">Input Trace</div>
 
           <div className="overlap">
-            <div className="text-wrapper-5">Choose File</div>
+            <input
+              type="file"
+              accept=".txt"
+              ref={fileInputRef}
+              style={{ marginTop: "10px", color: "white" }}
+            />
           </div>
 
-          <div className="overlap-group">
+          <div className="overlap-group" onClick={handleStart} style={{ cursor: "pointer"}}>
             <div className="text-wrapper-6">START</div>
           </div>
         </div>
@@ -207,25 +239,16 @@ export const Desktop = () => {
         <div className="text-wrapper-10">SIMULATION RESULTS</div>
 
         <div className="group-2">
-          <div className="text-wrapper-11">Hits: 0</div>
-
-          <div className="text-wrapper-12">Mass Rate: 0</div>
-
-          <div className="text-wrapper-13">Probe Hits: 0</div>
-
-          <div className="text-wrapper-14">Hit Rate: 0.00%</div>
-
-          <div className="text-wrapper-15">Load Factor: 0</div>
-
-          <div className="text-wrapper-16">Probe Misses: 0</div>
-
-          <div className="text-wrapper-17">Chain Misses: 0</div>
-
-          <div className="text-wrapper-18">Misses: 0</div>
-
-          <div className="text-wrapper-19">Collisions: 0</div>
-
-          <div className="text-wrapper-20">Chain Hits: 0</div>
+          <div className="text-wrapper-11">Hits: {results?.hits ?? 0}</div>
+          <div className="text-wrapper-12">Misses: {results?.misses ?? 0}</div>
+          <div className="text-wrapper-13">Probe Hits: {results?.probe_hits ?? 0}</div>
+          <div className="text-wrapper-14">Hit Rate: {results ? ((results.hits / (results.hits + results.misses)) * 100).toFixed(2) + "%" : "0.00%"}</div>
+          <div className="text-wrapper-15">Load Factor: {results?.load_factor ?? 0}</div>
+          <div className="text-wrapper-16">Probe Misses: {results?.probe_misses ?? 0}</div>
+          <div className="text-wrapper-17">Chain Misses: {results?.chain_misses ?? 0}</div>
+          <div className="text-wrapper-18">Misses: {results?.misses ?? 0}</div>
+          <div className="text-wrapper-19">Collisions: {results?.collisions ?? 0}</div>
+          <div className="text-wrapper-20">Chain Hits: {results?.chain_hits ?? 0}</div>
         </div>
       </div>
     </div>
