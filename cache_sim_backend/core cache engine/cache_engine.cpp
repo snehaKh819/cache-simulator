@@ -43,22 +43,67 @@ double CacheEngine::getLoadFactor() const {
 }
 
 void CacheEngine::rehash() {
-    int oldRows = rows, oldCols = cols;
-    auto oldTable = table;
+    // Print table before rehashing
+    // cout << "Rehashing..." << endl;
+    // for (int i = 0; i < rows; ++i) {
+    //     for (int j = 0; j < cols; ++j) {
+    //         cout << "Table[" << i << "][" << j << "]: ";
+    //         for (int key : table[i][j]) {
+    //             cout << key << " ";
+    //         }
+    //         cout << endl;
+    //     }
+    // }
+
+    // int oldRows = rows, oldCols = cols;
+    // auto oldTable = table;
+
+    // rows *= 2;
+    // cols *= 2;
+    
+    // size=0;
+    // table.clear();
+    // table.resize(rows, vector<list<int>>(cols));
+
+    // for (int i = 0; i < oldRows; ++i) {
+    //     for (int j = 0; j < oldCols; ++j) {
+    //         for(int key: oldTable[i][j]){
+    //             insert(key, false); 
+    //         }
+    //     }
+    // }
+
+    // Print table after rehashing
+    // cout << "Rehashed table:" << endl;
+    // for (int i = 0; i < rows; ++i) {
+    //     for (int j = 0; j < cols; ++j) {
+    //         cout << "Table[" << i << "][" << j << "]: ";
+    //         for (int key : table[i][j]) {
+    //             cout << key << " ";
+    //         }
+    //         cout << endl;
+    //     }
+    // }
+
+
+    vector<int> allKeys;
+    for (const auto& row : table) {
+        for (const auto& cell : row) {
+            for (int key : cell) {
+                allKeys.push_back(key);
+            }
+        }
+    }
 
     rows *= 2;
     cols *= 2;
-    
-    size=0;
+    size = 0;
+
     table.clear();
     table.resize(rows, vector<list<int>>(cols));
 
-    for (int i = 0; i < oldRows; ++i) {
-        for (int j = 0; j < oldCols; ++j) {
-            for(int key: oldTable[i][j]){
-                insert(key, false); 
-            }
-        }
+    for (int key : allKeys) {
+        insert(key, false); 
     }
 }
 
