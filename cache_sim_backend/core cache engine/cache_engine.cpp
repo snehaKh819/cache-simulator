@@ -1,11 +1,4 @@
 #include "cache_engine.h"
-#include <stdlib.h>
-#include <cmath>
-#include <algorithm>
-#include <limits>
-#include <string>
-#include <iostream>
-#include <fstream>
 
 CacheEngine::CacheEngine(int r, int c, int maxProbe, double threshold)
     : rows(r), cols(c), size(0), maxProbeLimit(maxProbe), loadFactorThreshold(threshold),
@@ -14,7 +7,7 @@ CacheEngine::CacheEngine(int r, int c, int maxProbe, double threshold)
     table.resize(rows, vector<list<int>>(cols));
 }
 
-pair<int, int> CacheEngine::primaryHash(int key) {
+pair<int, int> CacheEngine::primaryHash(int key) const {
     key = ((key >> 16) ^ key) * 0x45d9f3b;
     key = ((key >> 16) ^ key) * 0x45d9f3b;
     key = (key >> 16) ^ key;
@@ -23,14 +16,14 @@ pair<int, int> CacheEngine::primaryHash(int key) {
     return {abs(i), abs(j)};
 }
 
-pair<int, int> CacheEngine::quadraticProbe(int i, int j, int probeCount) {
+pair<int, int> CacheEngine::quadraticProbe(int i, int j, int probeCount) const {
     int offset = probeCount * probeCount;
     int newI = (i + offset) % rows;
     int newJ = (j + offset) % cols;
     return {newI, newJ};
 }
 
-pair<int, int> CacheEngine::doubleHash(int key, int attempt) {
+pair<int, int> CacheEngine::doubleHash(int key, int attempt) const {
     int h1 = key % rows;
     int h2 = 1 + (key % (cols - 1));
     int newI = (h1 + attempt * h2) % rows;
@@ -43,49 +36,6 @@ double CacheEngine::getLoadFactor() const {
 }
 
 void CacheEngine::rehash() {
-    // Print table before rehashing
-    // cout << "Rehashing..." << endl;
-    // for (int i = 0; i < rows; ++i) {
-    //     for (int j = 0; j < cols; ++j) {
-    //         cout << "Table[" << i << "][" << j << "]: ";
-    //         for (int key : table[i][j]) {
-    //             cout << key << " ";
-    //         }
-    //         cout << endl;
-    //     }
-    // }
-
-    // int oldRows = rows, oldCols = cols;
-    // auto oldTable = table;
-
-    // rows *= 2;
-    // cols *= 2;
-    
-    // size=0;
-    // table.clear();
-    // table.resize(rows, vector<list<int>>(cols));
-
-    // for (int i = 0; i < oldRows; ++i) {
-    //     for (int j = 0; j < oldCols; ++j) {
-    //         for(int key: oldTable[i][j]){
-    //             insert(key, false); 
-    //         }
-    //     }
-    // }
-
-    // Print table after rehashing
-    // cout << "Rehashed table:" << endl;
-    // for (int i = 0; i < rows; ++i) {
-    //     for (int j = 0; j < cols; ++j) {
-    //         cout << "Table[" << i << "][" << j << "]: ";
-    //         for (int key : table[i][j]) {
-    //             cout << key << " ";
-    //         }
-    //         cout << endl;
-    //     }
-    // }
-
-
     vector<int> allKeys;
     for (const auto& row : table) {
         for (const auto& cell : row) {
@@ -105,79 +55,142 @@ void CacheEngine::rehash() {
     for (int key : allKeys) {
         insert(key, false); 
     }
+
+    // Ensure load factor is below threshold after rehashing
+    while (getLoadFactor() > loadFactorThreshold) {
+        rows *= 2;
+        cols *= 2;
+        table.clear();
+        table.resize(rows, vector<list<int>>(cols));
+        size = 0;
+        for (int key : allKeys) {
+            insert(key, false);
+        }
+    }
 }
 
-bool CacheEngine::search(int key) {
+// Combined search and insert logic to avoid redundant lookups
+bool CacheEngine::findAndMaybeInsert(int key, bool doInsert, bool countStats) {
     pair<int, int> pos = primaryHash(key);
     int i = pos.first, j = pos.second;
 
+    // Check primary cell (chaining)
     for (int val : table[i][j]) {
         if (val == key) {
-            chainHits++;
+            if (countStats) { hitCount++; chainHits++; }
             return true;
         }
     }
+    if (countStats) chainMisses++;
 
+    // Quadratic probing
     for (int probe = 1; probe <= maxProbeLimit; ++probe) {
         pair<int, int> newPos = quadraticProbe(i, j, probe);
         int newI = newPos.first, newJ = newPos.second;
 
         for (int val : table[newI][newJ]) {
             if (val == key) {
-                probeHits++;
+                if (countStats) { hitCount++; probeHits++; }
+                return true;
+            }
+        }
+    }
+    if (countStats) probeMisses++;
+
+    // Double hashing (try up to maxProbeLimit attempts)
+    for (int attempt = 1; attempt <= maxProbeLimit; ++attempt) {
+        pair<int, int> doubleHashPos = doubleHash(key, attempt);
+        int di = doubleHashPos.first, dj = doubleHashPos.second;
+        for (int val : table[di][dj]) {
+            if (val == key) {
+                if (countStats) { hitCount++; probeHits++; }
                 return true;
             }
         }
     }
 
+    // Not found, insert if requested
+    if (doInsert) {
+        if (countStats) missCount++;
+        // Try to insert in primary cell
+        if (table[i][j].empty()) {
+            table[i][j].push_back(key);
+        } else {
+            bool inserted = false;
+            // Try quadratic probing
+            for (int probe = 1; probe <= maxProbeLimit; ++probe) {
+                pair<int, int> newPos = quadraticProbe(i, j, probe);
+                int newI = newPos.first, newJ = newPos.second;
+                if (table[newI][newJ].empty()) {
+                    table[newI][newJ].push_back(key);
+                    if (countStats) collisionCount++;
+                    inserted = true;
+                    break;
+                } else {
+                    if (countStats) collisionCount++;
+                }
+            }
+            // Try double hashing if not inserted
+            if (!inserted) {
+                for (int attempt = 1; attempt <= maxProbeLimit; ++attempt) {
+                    pair<int, int> doubleHashPos = doubleHash(key, attempt);
+                    int di = doubleHashPos.first, dj = doubleHashPos.second;
+                    if (table[di][dj].empty()) {
+                        table[di][dj].push_back(key);
+                        if (countStats) collisionCount++;
+                        inserted = true;
+                        break;
+                    } else {
+                        if (countStats) collisionCount++;
+                    }
+                }
+            }
+            // If still not inserted, append to primary cell (chaining fallback)
+            if (!inserted) {
+                table[i][j].push_back(key);
+                if (countStats) collisionCount++;
+            }
+        }
+        size++;
+        // Rehash if needed
+        if (getLoadFactor() > loadFactorThreshold) {
+            rehash();
+        }
+    }
+    return false;
+}
+
+bool CacheEngine::search(int key) const {
+    pair<int, int> pos = primaryHash(key);
+    int i = pos.first, j = pos.second;
+
+    for (int val : table[i][j]) {
+        if (val == key) return true;
+    }
+    for (int probe = 1; probe <= maxProbeLimit; ++probe) {
+        pair<int, int> newPos = quadraticProbe(i, j, probe);
+        int newI = newPos.first, newJ = newPos.second;
+        for (int val : table[newI][newJ]) {
+            if (val == key) return true;
+        }
+    }
+    for (int attempt = 1; attempt <= maxProbeLimit; ++attempt) {
+        pair<int, int> doubleHashPos = doubleHash(key, attempt);
+        int di = doubleHashPos.first, dj = doubleHashPos.second;
+        for (int val : table[di][dj]) {
+            if (val == key) return true;
+        }
+    }
     return false;
 }
 
 void CacheEngine::insert(int key, bool countStats) {
-    if (search(key)) {
-        if (countStats) hitCount++;
-        return;
-    }
-
-    missCount++;
-
-    pair<int, int> pos = primaryHash(key);
-    int i = pos.first, j = pos.second;
-
-    if (table[i][j].empty()) {
-        table[i][j].push_back(key);
-    } else {
-        bool inserted = false;
-        for (int probe = 1; probe <= maxProbeLimit; ++probe) {
-            pair<int, int> newPos = quadraticProbe(i, j, probe);
-            int newI = newPos.first, newJ = newPos.second;
-
-            if (table[newI][newJ].empty()) {
-                table[newI][newJ].push_back(key);
-                if (countStats) collisionCount++;
-                inserted = true;
-                break;
-            } else {
-                if (countStats) collisionCount++;
-            }
-        }
-
-        if (!inserted) {
-            pair<int, int> doubleHashPos = doubleHash(key, 1);
-            table[doubleHashPos.first][doubleHashPos.second].push_back(key);
-            if (countStats) collisionCount++;
-        }
-    }
-
-    size++;
-    if (getLoadFactor() > loadFactorThreshold) {
-        rehash();
-    }
+    findAndMaybeInsert(key, true, countStats);
 }
 
 void CacheEngine::simulateRequestStream(const vector<int>& keys) {
     for (int key : keys) {
-        insert(key);
+        insert(key, true);
     }
 }
 
