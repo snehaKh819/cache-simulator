@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import './CacheSimulator.css'; // Make sure to style accordingly
+import './CacheSimulator.css'; // Import CSS
 
 const CacheSimulator = () => {
   const [cacheSize, setCacheSize] = useState('');
@@ -7,7 +7,6 @@ const CacheSimulator = () => {
   const [addresses, setAddresses] = useState('');
   const [results, setResults] = useState([]);
   const [hitRate, setHitRate] = useState(null);
-  const [testCases, setTestCases] = useState([]);
 
   const handleSimulate = () => {
     if (!cacheSize || !blockSize || !addresses) return;
@@ -48,28 +47,6 @@ const CacheSimulator = () => {
     reader.readAsText(file);
   };
 
-  const handleCSVUpload = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const lines = event.target.result.trim().split('\n');
-      const [headerLine, ...dataLines] = lines;
-      const headers = headerLine.split(',');
-
-      const parsedData = dataLines.map(line => {
-        const values = line.split(',');
-        const obj = {};
-        headers.forEach((h, i) => obj[h.trim()] = values[i].trim());
-        return obj;
-      });
-
-      setTestCases(parsedData);
-    };
-    reader.readAsText(file);
-  };
-
   return (
     <div className="container">
       <header>
@@ -95,9 +72,6 @@ const CacheSimulator = () => {
 
           <label>Upload Address File (.txt)</label>
           <input type="file" accept=".txt" onChange={handleFileUpload} />
-
-          <label>Upload Test Cases File (.csv)</label>
-          <input type="file" accept=".csv" onChange={handleCSVUpload} />
 
           <button onClick={handleSimulate}>Simulate Cache</button>
         </div>
@@ -131,34 +105,6 @@ const CacheSimulator = () => {
                 </tr>
               </tfoot>
             </table>
-          )}
-
-          {testCases.length > 0 && (
-            <>
-              <h3>Test Case Results</h3>
-              <table>
-                <thead>
-                  <tr>
-                    <th>Test Name</th>
-                    <th>Hits</th>
-                    <th>Misses</th>
-                    <th>Collisions</th>
-                    <th>Load Factor</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {testCases.map((test, idx) => (
-                    <tr key={idx}>
-                      <td>{test["Test Name"]}</td>
-                      <td>{test["Hits"]}</td>
-                      <td>{test["Misses"]}</td>
-                      <td>{test["Collisions"]}</td>
-                      <td>{test["Load Factor"]}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </>
           )}
         </div>
       </div>
