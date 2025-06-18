@@ -54,7 +54,7 @@ def upload_file_simulation(request):
         try:
             # Call the compiled C++ engine with the uploaded file
             result = subprocess.run(
-                ['./cache_engine', file_path],
+                ['core cache engine/cache_engine.exe', file_path],
                 capture_output=True,
                 text=True,
                 check=True
