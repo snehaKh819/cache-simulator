@@ -21,7 +21,7 @@ int main() {
     for (int i = 0; i < NUM_KEYS; ++i) {
         int key = rand() % MAX_KEY;
         outFile << key;
-        if (i < NUM_KEYS - 1) outFile << " ";
+        if (i < NUM_KEYS - 1) outFile << " , ";
     }
 
     outFile.close();
