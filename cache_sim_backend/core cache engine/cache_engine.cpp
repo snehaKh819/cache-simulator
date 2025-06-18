@@ -189,22 +189,8 @@ void CacheEngine::insert(int key, bool countStats) {
 }
 
 void CacheEngine::simulateRequestStream(const vector<int>& keys) {
-    steps.clear();
     for (int key : keys) {
-        bool found = findAndMaybeInsert(key, true, true);
-        // Record step
-        StepInfo step;
-        step.address = key;
-        step.result = found ? "hit" : "miss";
-        step.cacheState.resize(rows, vector<int>(cols, -1));
-        for (int r = 0; r < rows; ++r) {
-            for (int c = 0; c < cols; ++c) {
-                if (!table[r][c].empty()) {
-                    step.cacheState[r][c] = table[r][c].front();
-                }
-            }
-        }
-        steps.push_back(step);
+        insert(key, true);
     }
 }
 
@@ -219,22 +205,7 @@ void CacheEngine::printStatsAsJSON() const {
     cout << "  \"probe_hits\": " << probeHits << ",\n";
     cout << "  \"chain_hits\": " << chainHits << ",\n";
     cout << "  \"probe_misses\": " << probeMisses << ",\n";
-    cout << "  \"chain_misses\": " << chainMisses << ",\n";
-    cout << "  \"steps\": [\n";
-    for (size_t i = 0; i < steps.size(); ++i) {
-        cout << "    {\"address\": " << steps[i].address
-             << ", \"result\": \"" << steps[i].result << "\", \"cache\": [";
-        for (size_t r = 0; r < steps[i].cacheState.size(); ++r) {
-            for (size_t c = 0; c < steps[i].cacheState[r].size(); ++c) {
-                cout << steps[i].cacheState[r][c];
-                if (!(r == steps[i].cacheState.size() - 1 && c == steps[i].cacheState[r].size() - 1))
-                    cout << ", ";
-            }
-        }
-        cout << "]}";
-        if (i != steps.size() - 1) cout << ",\n";
-    }
-    cout << "\n  ]\n";
+    cout << "  \"chain_misses\": " << chainMisses << "\n";
     cout << "}" << endl;
 }
 

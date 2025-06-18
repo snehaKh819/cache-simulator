@@ -9,15 +9,8 @@
 #include <fstream>
 #include <cstdlib>
 #include <cmath>
-#include <string>
 
 using namespace std;
-
-struct StepInfo {
-    int address;
-    std::string result;
-    std::vector<std::vector<int>> cacheState; // -1 for empty
-};
 
 class CacheEngine {
 public:
@@ -28,8 +21,6 @@ public:
     void insert(int key, bool countStats = true);
     void simulateRequestStream(const vector<int>& keys);
     void printStatsAsJSON() const;
-
-    std::vector<StepInfo> steps;
 
 private:
     int rows, cols, size;

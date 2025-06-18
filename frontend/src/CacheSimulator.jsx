@@ -82,53 +82,6 @@ const CacheSimulator = () => {
               <pre style={{ background: '#21262d', padding: '10px', borderRadius: '5px', color: '#e6edf3' }}>{JSON.stringify(backendResult, null, 2)}</pre>
             </div>
           )}
-
-          {/* Visualization of cache state per step */}
-          {backendResult?.steps && (
-            <div style={{ marginTop: '30px' }}>
-              <h4>Cache Visualization (Step by Step)</h4>
-              {backendResult.steps.map((step, idx) => {
-                // Try to infer a square or near-square grid
-                const cacheLen = step.cache.length;
-                let numRows = Math.floor(Math.sqrt(cacheLen));
-                let numCols = Math.ceil(cacheLen / numRows);
-                if (numRows * numCols < cacheLen) numRows++;
-                return (
-                  <div key={idx} style={{ marginBottom: '18px', padding: '10px', background: '#161b22', borderRadius: '6px' }}>
-                    <div style={{ marginBottom: '6px' }}>
-                      <strong>Step {idx + 1}:</strong> Address <span style={{ color: '#58a6ff' }}>{step.address}</span> — <span style={{ color: step.result === 'hit' ? '#2ea043' : '#e5534b' }}>{step.result.toUpperCase()}</span>
-                    </div>
-                    <div style={{
-                      display: 'grid',
-                      gridTemplateColumns: `repeat(${numCols}, 40px)`,
-                      gap: '6px'
-                    }}>
-                      {step.cache.map((val, i) => (
-                        <div
-                          key={i}
-                          style={{
-                            width: 40,
-                            height: 40,
-                            background: val === step.address ? '#238636' : '#21262d',
-                            color: '#fff',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            border: '1px solid #30363d',
-                            borderRadius: 4,
-                            fontWeight: 'bold',
-                            fontSize: '1.1em',
-                          }}
-                        >
-                          {val !== -1 && val !== null ? val : '-'}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
         </div>
       </div>
     </div>
