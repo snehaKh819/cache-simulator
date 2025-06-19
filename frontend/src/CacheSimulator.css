@@ -72,7 +72,9 @@ header nav a {
 
 /* Add extra space for the file input label */
 .left label:first-of-type {
-  margin-top: 25px;
+  margin-top: 50px;
+  font-size: 1.15rem;
+  font-weight: 700;
 }
 
 .left input,
@@ -90,6 +92,7 @@ header nav a {
 /* Add space above the file input */
 .left input[type="file"] {
   margin-top: 18px;
+  margin-bottom: 50px;
 }
 
 .left button {
@@ -134,12 +137,15 @@ header nav a {
   background-color: #161b22;
 }
 
-.right h4 {
-  font-size: 1.4rem;
+.right h3 {
+  font-size: 1.7rem;
+  margin-bottom: 28px;
+  margin-top: 30px;
 }
 
 .simulation-result pre {
-  font-size: 1.1rem;
+  font-size: 1.5rem;
+  margin-top: 50px;
 }
 
 @media (max-width: 768px) {
